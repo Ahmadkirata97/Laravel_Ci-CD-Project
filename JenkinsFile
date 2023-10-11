@@ -1,0 +1,54 @@
+pipeline{
+    agent{
+        label any
+    }
+    stages{
+        stage("Verify Tooling"){
+            steps{
+                sh '''
+                    docker info
+                    docker version
+                    docker compose version
+                ''' 
+            }
+           
+        }
+        stage("Clear All Running Docker Container"){
+            steps{
+                script {
+                    try {
+                        sh 'docker rm -f $(docker ps -a)'
+
+                    } catch (exception e ) {
+                        echo "No Running Docker Container"
+                    } 
+
+                }
+
+            }
+        }
+        stage(" Start Docker Container ") {
+            steps {
+                sh 'make up'
+                sh 'docker compose ps'
+            }
+        }
+        stage(" Run Composer Install "){
+            steps {
+                sh 'docker-compose run --rm composer install'
+            }
+        }
+        stage(" Run Test ") {
+            steps {
+                sh 'docker-compose run --rm artisan test'
+            }
+        }
+    }
+    post{
+        always{
+            sh 'docker-compose down --remove-orphans -v'
+            sh 'docker-compose ps'
+            
+        }
+    }
+}
