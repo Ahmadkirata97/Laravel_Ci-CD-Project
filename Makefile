@@ -7,7 +7,5 @@ export UID
 export GID
 export USER
 
-.PHONY: up
-
 up:
     docker-compose up -d
